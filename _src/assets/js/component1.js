@@ -1,0 +1,1 @@
+console.warn("I'm from the component file");

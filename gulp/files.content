@@ -1,0 +1,248 @@
+
+# Table of Contents
+#   - package.json
+#   - bashrc
+#   - webpack.config.js
+#   - gitignore
+#   - functions
+# ----------------------------------------------------------------------------------------------------------------
+
+echo  "Engage! ..."
+
+# ----------------------------------------------------------------------------------------------------------------
+#                                                                                                   package.json
+# ----------------------------------------------------------------------------------------------------------------
+
+# "postinstall": "$(npm bin)/typings install --global --save dt~core-js" # ???
+
+package_json_content='{
+  "name": "Workflow",
+  "version": "1.0.0",
+  "description": "Workflow with gulp | Webpack | React | Sass | Autoprefixer | livereload",
+  "main": "index.js",
+  "scripts": {
+      "build": "tsc --rootDir _src --outDir _dist",
+      "postinstall": "typings install",
+      "test": "karma test",
+      "test:single": "karma test --single-run"
+    },
+
+  "author": "eNzr",
+  "license": "MIT"
+}
+'
+
+# ----------------------------------------------------------------------------------------------------------------
+#                                                                                                         bashrc
+# ----------------------------------------------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------------------------------------------
+#                                                                                              webpack.config.js
+# ----------------------------------------------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------------------------------------------
+#                                                                                                      gitignore
+# ----------------------------------------------------------------------------------------------------------------
+
+gitignore_content='# Compiled source    #
+\n*.com
+\n*.class
+\n*.dll
+\n*.exe
+\n*.o
+\n*.so
+\n
+\n# Packages           #
+\n*.7z
+\n*.dmg
+\n*.gz
+\n*.iso
+\n*.jar
+\n*.rar
+\n*.tar
+\n*.zip
+\n
+\n# Logs and databases #
+\n*.log
+\n*.sql
+\n*.sqlite
+\n
+\n# OS generated files #
+\n# already  in \.* rule
+\n# .DS_Store
+\n# .DS_Store?
+\n# *.DS_Store
+\n# ._*
+\n# .Spotlight-V100
+\n# .Trashes
+\n
+\nehthumbs.db
+\nThumbs.db
+\n~*
+\n*.sass-cache*
+\n\.*
+\n
+\n!.gitignore
+\n!.htaccess
+\n!.editorconfig
+\n
+\n# Node related       #
+\n/bower_components/*
+\n/node_modules/*
+\n
+\n# development files  #
+\n# assets_dev
+\n__mevines_dist/*
+\n/_old/*
+\n__jekyll_dist/*
+\ndist/
+\ntypings/
+\n
+\n
+\n
+\n# DO NOT ARCHIVE MINIMIZED FILES JS & CSS
+\n
+\n# css/style.min.css
+\n# css/style.min.css.map
+\n# js/javascript.min.js
+
+
+
+'
+
+
+# ----------------------------------------------------------------------------------------------------------------
+#                                                                                                      functions
+# ----------------------------------------------------------------------------------------------------------------
+
+    function printGoodBye {
+        trap 'echo ""; echo ""; echo  Come back soon ! ; echo "----------------"; echo " "; exit' INT
+    }
+
+    function grab_global_dependency {
+        # at this point yarn could not be installed
+        # if [[ $useYarnOverNpm == true ]]; then sudo yarn global add $@
+        # else sudo npm install $@ -g
+        # fi
+
+        sudo npm install $@ -g
+    }
+
+
+
+    function grab_dependency {
+        if [[ $useYarnOverNpm == true ]]; then sudo yarn add $@
+        else sudo npm install $@ --save
+        fi
+    }
+
+    function grab_dev_dependency {
+        if [[ $useYarnOverNpm == true ]]; then sudo yarn add $@ --dev
+        else sudo npm install $@ --save-dev
+        fi
+    }
+
+    function dependencies {
+        echo "-> Dependencies -------------"
+        if [[ $installGlobalDepedencies == true ]]; then
+
+            # TODO : add a test to check if homebrew & node are installed
+            #       then if not run this installation
+            /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+            brew update
+            brew doctor
+            brew install node
+
+            for var in $global_dependencies; do
+                grab_global_dependency $var
+            done
+        else echo " -- Global dependencies : ignored"
+        fi
+        echo "-> Dependencies -------------"
+        for var in $dependencies; do
+            grab_dependency $var
+        done
+        echo "-> Dev Dependencies -------------"
+        for var in $dev_dependencies; do
+            grab_dev_dependency $var
+        done
+    }
+
+    function init {
+        typeset -t action
+        typeset -t method
+        action=${1}
+        method=${2}
+        case $action in
+            packageJson )   if [[ $method != false ]]; then
+                                echo "-> config : init : packageJson --"
+                                if [[ -s package.json  ]]; then echo " -- package.json already exist -> not overwritten --"
+                                else
+                                    case $method in
+                                        copyFile )  echo $package_json_content >> package.json
+                                                    ;;
+                                        init )      if [[ $useYarnOverNpm == true ]]; then echo 1 ; sudo yarn init
+                                                    else echo npm: ; npm init
+                                                    fi
+                                                    ;;
+                                        initY )     if [[ $useYarnOverNpm == true ]]; then echo 1 ; sudo yarn init -y
+                                                    else echo npm: ; npm init -y
+                                                    fi
+                                                    ;;
+                                        * )         if [[ -f package.json  ]]; then echo remove package.json; rm package.json; fi
+                                                    touch package.json
+                                                    echo Create an empty package.json
+                                    esac
+                                fi
+                            else echo "-> packageJson : ignored"
+                            fi
+                            ;;
+            gitignore )     if [[ $method != false ]]; then
+                                echo "-> config : init : gitignore --"
+                                if [[ -s .gitignore  ]]; then
+                                    if [[ $foreceOvewriteGitignore == true ]]; then echo -e $gitignore_content >> .gitignore
+                                    else echo " -- gitignore already exist -> not overwritten --"
+                                    fi
+                                else
+                                    case $method in
+                                        copyFile )  echo -e $gitignore_content >> .gitignore
+                                                    ;;
+                                        * )         touch .gitignore
+                                                    echo Create an empty gitignore
+                                    esac
+                                fi
+                            else echo "-> gitignore : ignored"
+                            fi
+                            ;;
+
+            * )             echo
+                            echo ------------------------
+                            echo -
+                            echo -   Undifined Action : $action ---
+                            echo -
+                            echo ------------------------
+          esac
+    }
+
+# ----------------------------------------------------------------------------------------------------------------
+#                                                                                                       tasks run
+# ----------------------------------------------------------------------------------------------------------------
+
+    # printGoodBye # ; export -f printGoodBye
+
+    for i in $fileToGenerate; do
+            init $i ${!i}
+    done
+
+    if [[ $downloadDepedencies == true ]]; then
+        echo "-> Depedencies --"; dependencies
+
+
+        # ~/Sites/singlepage/singlepage/node_modules/.bin/typings install --global --save dt~core-js
+
+
+    fi
+
+
+    echo  "->  -- Happy coding ---"

@@ -1,0 +1,551 @@
+/* *****************************
+ *  Author:         eNzr
+ *  Company:        Mevines
+ *  Description:    Gulp workflow
+ *  Version:        1.0.0
+ *
+ *  Notes
+ *   // use rifraf instead of del if this need Windows compatibiity .. maybe one day .. or not
+ * ****************************** */
+
+"use strict";
+
+var gulp = require('gulp'),
+    postcss = require('gulp-postcss'),
+    precss = require('precss'),
+    rucksack = require('rucksack-css'),
+    autoprefixer = require('autoprefixer'),
+    cssnano = require('cssnano'),
+    animation = require('postcss-animation'),
+    gutil = require('gulp-util'),
+    sass = require('gulp-sass'),
+    rename= require ('gulp-rename'),
+    plumber = require ('gulp-plumber'),
+    watch = require('gulp-watch'),
+    browserSync = require('browser-sync');
+
+/*
+ * ***** CSS : variables *****
+ * */
+
+var dir = {
+    src:        './_src/',
+    htmlmod:    './modules/',
+    dest:       './_dest/',
+    js:         'assets/js/',
+    css:        'assets/styles/',
+    scss:       'assets/scss/',
+    sprites:    'assets/sprites/',
+    mixins:     '0-variables/mixins/'
+};
+
+var _prefix = {
+    default:    ['last 2 version'],
+    current:    ['> 1%', 'IE 9'],
+    large:      ['last 20 version'],
+    all:        ['last 100 version'],
+    performed:  ''
+};
+_prefix.performed =  _prefix.all;
+
+
+var processors = {
+    precss: [
+        rucksack,
+        precss(),
+        autoprefixer({browsers: _prefix.performed, cascade: false }),
+        cssnano()
+    ],
+    sass: [
+        rucksack,
+        autoprefixer({browsers: _prefix.performed, cascade: false }),
+
+    ],
+    performed: []
+};
+processors.performed = processors.sass;
+
+var testFunc = function() {
+    return gulp.src(dir.src + dir.css + 'styles.scss')
+        .pipe(plumber())
+        .pipe(sass())
+        .pipe(postcss(processors.performed))
+        .on('error', gutil.log)
+        .pipe(gulp.dest(dir.dest + dir.css));
+}
+
+/*
+ * ***** CSS : task *****
+ * */
+gulp.task('default', ['styles'], function() {
+
+});
+
+gulp.task('styles', function() {
+    return testFunc();
+});
+
+
+/* *****************************
+ *   FUNCTIONS
+ * ****************************** */
+
+
+/* *****************************
+ *   TASK
+ * ****************************** */
+
+gulp.task('build', function() {
+
+});
+
+// 'cleanAll', 'build:lib', 'build:styles', 'scripts', 'html'
+
+// gulp.task( 'build:all', [ 'build:lib', 'html', 'scripts',  'build:styles'], function() { });
+
+
+
+
+// gulp.task('cleanAll', require('./_gulptask/cleaner'));
+
+
+/* *****************************
+ *   Extarnal TASK
+ * ****************************** */
+
+/*
+ function getTask(fileName, task = -1) {
+ if (task === -1) {
+ task = fileName;
+ }
+ return require('./_gulptask/' + fileName) (gulp, plugins, config);
+ }
+
+ gulp.task('cleanAll', getTask('cleaner'));
+
+ */
+
+
+gulp.task('server',['build:all'],  function() {
+    browserSync.init({
+        notification: false,
+        server: {
+            baseDir: '_dest'
+        }
+    });
+
+    gulp.watch( [dir.src + dir.css + '**/*.scss' , dir.src + dir.css + '**/*.css' ], ['streamCSS']);
+
+
+
+    gulp.watch(dir.src + dir.js + '**/*.js', ['scripts'], function() {
+        gulp.start('reload');
+
+    });
+
+    watch(dir.src + dir.sprites + 'svg/**/*.svg', { ignoreInitial: true }, function() {
+        gulp.start('reloadSVG');
+
+    });
+
+    watch([dir.src + '**/*.js', dir.src + '**/*.jsx'], function() {
+        gulp.start('reloadJS');
+
+    });
+
+
+
+    gulp.watch(dir.src + '**/*.html', ['reloadHTML']);
+
+
+});
+
+gulp.task('streamCSS',['styles'], function() {
+    return gulp.src(dir.dest + dir.css + 'styles.css')
+        .pipe( browserSync.stream() );
+});
+
+gulp.task('streamSVG',['inline-svg-icons'], function() { });
+
+gulp.task('reloadSVG',['streamSVG'], function() {
+    gulp.start('reloadHTML');
+});
+
+gulp.task('reloadHTML',['html'], function() {
+    gulp.start('reload');
+});
+
+gulp.task('reloadJS',['scripts'], function() {
+    return gulp.src(dir.dest + dir.js + 'main.js')
+        .pipe( browserSync.stream() );
+});
+
+gulp.task('reload', function() { browserSync.reload(); });
+
+
+
+
+
+
+
+
+
+
+gulpfile-old-enzr-back.js
+
+var gulp = require('gulp'),
+    bower = require('gulp-bower'),
+    del = require('del'),
+    newer = require('gulp-newer'),
+    concat = require('gulp-concat'),
+    imagemin = require('gulp-imagemin'),
+    uglify = require('gulp-uglify'),
+    rename = require('gulp-rename'),
+    autoprefixer = require('gulp-autoprefixer'),
+    sass = require('gulp-ruby-sass'),
+    minifycss = require('gulp-minify-css'),
+    plumber = require('gulp-plumber'),
+    stripCssComments = require('gulp-strip-css-comments'),
+    removeEmptyLines = require('gulp-remove-empty-lines'),
+    watch = require('gulp-watch'),
+    browserSync = require('browser-sync').create(),
+    reload = browserSync.reload;
+
+
+
+var pathTo = {
+    baseDir:        '.',
+
+    rootDir:        '../../',
+    devDir:         './',
+    prodDir:        './',
+
+    assetsDirDev:   './assets_dev',
+    assetsDir:      './assets',
+
+    bowerDir:       './bower_components',
+    npmdir:         './node_modules',
+    otherPackages:  './assets_dev/other_modules',
+
+    sassPath:       './assets_dev/sass'
+};
+
+var params = {
+    minify: {compatibility: 'ie8'},
+    autoprefixer: {
+        v1: ['last 2 version', 'safari 5', 'ie 8', 'ie 9', 'opera 12.1', 'ios 6', 'android 4'],
+        v2: ['last 3 version', 'safari 5', 'ie 8', 'ie 9'],
+        v3: ['last 3 version'],
+        v4: ['last 15 versions', '> 1%', 'ie 8', 'ie 7'],
+        default: ['last 5 version']
+    }
+};
+
+// ----------------------------------------------------  GULP DEFAULT TASKS --------------------------------------------
+
+// , 'vendors', 'vendors', 'html ,  'watch' ' ['vendors', 'deployAssets'] , 'watch'
+gulp.task('default', ['watch']);
+
+// ----------------------------------------------------  GULP WATCH TASKS --------------------------------------------
+
+gulp.task('php-isItNeeded', function () {
+    "use strict";
+    php.server({
+        base: 'build',
+        port: 8010,
+        keepinglive: true
+    });
+});
+
+gulp.task('server', ['mainHtml', 'mainJs', 'mainCSS', 'mainSCSS'], function () {
+
+    var files = [
+        './style.css',
+        './*.php',
+        './assets/php/**/*.php'
+    ];
+
+    browserSync.init(files, {
+        proxy: 'elections.fgov.be/blog',
+        notify: false,
+        open: true
+    });
+});
+
+
+
+
+// ----------------------------------------------------  GULP ENTRY POINTS TASKS --------------------------------------------
+
+gulp.task('buildMyAssets', ['mainHtml','mainJs', 'mainCSS', 'mainSCSS']);
+gulp.task('vendors',  [ 'vendorsLib']);
+gulp.task('watch', ['server'],  function () {
+
+    gulp.watch('index.html', reload);
+    gulp.watch(pathTo.assetsDirDev + '/js/*.js', ['mainJs']);
+    gulp.watch(pathTo.assetsDirDev + '/scss/**/*.scss', ['mainSCSS']);
+    //gulp.watch(pathTo.assetsDirDev + '/css/*.css', ['mainCSS']);
+
+
+});
+// ----------------------------------------------------  GULP PLAIN CONTENT IMPORT --------------------------------------------
+gulp.task('deployAssets', function() {
+    var sourceImg = pathTo.assetsDirDev + '/img/**.*',
+        sourceFonts = [
+            pathTo.assetsDirDev + '/fonts_files/**.*'
+        ],
+        sourceVideos = pathTo.assetsDirDev + '/videos/**.*',
+        sourceSounds = pathTo.assetsDirDev + '/sounds/**.*';
+
+    gulp.src(sourceImg)
+        .pipe(newer(pathTo.assetsDir + '/img'))
+        .pipe(imagemin())
+        .pipe(gulp.dest(pathTo.assetsDir + '/img'));
+
+    gulp.src(sourceFonts)
+        .pipe(newer(pathTo.assetsDir+ '/fonts'))
+        .pipe(gulp.dest(pathTo.assetsDir + '/fonts'));
+
+    gulp.src(sourceVideos)
+        .pipe(newer(pathTo.assetsDir+ '/videos'))
+        .pipe(gulp.dest(pathTo.assetsDir + '/videos'));
+
+    gulp.src(sourceSounds)
+        .pipe(newer(pathTo.assetsDir+ '/sounds'))
+        .pipe(gulp.dest(pathTo.assetsDir + '/sounds'));
+});
+// ----------------------------------------------------  GULP VENDORS TASKS --------------------------------------------
+gulp.task('fontawesome', function() {
+    gulp.src(pathTo.bowerDir + '/fontawesome/fonts/**.*')
+        .pipe(newer(pathTo.assetsDir + '/fonts'))
+        .pipe(gulp.dest(pathTo.assetsDir + '/fonts'));
+
+    /*
+     return sass(pathTo.bowerDir + '/fontawesome/scss/font-awesome.scss', { style: 'compressed' })
+     .pipe(autoprefixer({
+     browsers: params.autoprefixer.default
+     }))
+     .pipe(gulp.dest(pathTo.assetsDir + '/css'));
+     */
+
+    gulp.src(pathTo.bowerDir + '/fontawesome/css/font-awesome.min.css')
+        .pipe(rename('font-awesome.css'))
+        .pipe(autoprefixer({
+            browsers: params.autoprefixer.v4
+        }))
+        .pipe(gulp.dest(pathTo.assetsDir + '/css'));
+
+});
+gulp.task('vendorsLib',[ 'deployAssets', 'fontawesome'], function() {
+    /* CSS : not use int wordpress project : pathTo.bowerDir + '/normalize.css/normalize.css',*/
+    var sourcesCSS = [
+            pathTo.bowerDir + '/animate-css/animate.css'
+        ],
+        sourcesSCSS = [
+            pathTo.bowerDir + '/sanitize-css/sanitize.scss'
+        ],
+        sourcesSCSSColors = [
+            pathTo.npmdir + '/colors.css/sass/_skins.scss',
+            pathTo.npmdir + '/colors.css/sass/_variables.scss'
+        ],
+        sourcesJS = [
+            pathTo.bowerDir + '/jquery/dist/jquery.js',
+            pathTo.bowerDir + '/html5shiv/dist/html5shiv.js',
+            pathTo.bowerDir + '/modernizr/modernizr.js',
+            pathTo.bowerDir + '/Respond/src/respond.js',
+            pathTo.bowerDir + '/jquery-smooth-scroll/jquery.smooth-scroll.js',
+            pathTo.bowerDir + '/waypoints/lib/jquery.waypoints.js'
+        ];
+    // normalize is included in bootstrap ... TODO remove from bootstrap.CSS change to standardize
+
+    // CSS
+    gulp.src(sourcesCSS)
+        .pipe(newer({dest: pathTo.assetsDir + '/css'}))
+        .pipe(autoprefixer({
+            browsers: params.autoprefixer.default
+        }))
+        .pipe(minifycss(params.minify))
+        .pipe(gulp.dest(pathTo.assetsDir + '/css'));
+
+    /* in the wordpress project : those are embeded in the styles.scss file */
+    /*
+     sass(sourcesSCSS , { style: 'compressed' })
+     .pipe(autoprefixer({
+     browsers: params.autoprefixer.default
+     }))
+     .pipe(gulp.dest(pathTo.assetsDir + '/css'));
+
+
+     gulp.src(sourcesSCSSColors)
+     .pipe(newer({dest: pathTo.assetsDirDev + '/scss'}))
+     .pipe(gulp.dest(pathTo.assetsDirDev + '/scss'));
+     */
+
+    // JS
+    gulp.src(sourcesJS)
+        .pipe(newer({dest: pathTo.assetsDir + '/js'}))
+        .pipe(uglify())
+        .pipe(gulp.dest(pathTo.assetsDir + '/js'));
+
+    gulp.src(pathTo.bowerDir + '/jquery-legacy/dist/jquery.js')
+        .pipe(rename('jquery1.js'))
+        .pipe(newer({dest: pathTo.assetsDir + '/js'}))
+        .pipe(uglify())
+        .pipe(gulp.dest(pathTo.assetsDir + '/js'));
+});
+
+
+
+
+
+gulp.task('bootstrap3-icons', function() {
+    // bootstrap3
+    var source = pathTo.bowerDir + '/bootstrap-sass-official/assets/fonts/bootstrap/**.*';
+    gulp.src(source)
+        .pipe(gulp.dest(pathTo.assetsDir + '/fonts/bootstrap'));
+
+
+});
+
+gulp.task('bootstrap3JS', function() {
+    var sources = [
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/affix.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/alert.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/button.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/carousel.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/collapse.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/dropdown.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/modal.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/tooltip.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/popover.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/scrollspy.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/tab.js',
+        pathTo.bowerDir + '/bootstrap-sass-official/assets/javascripts/bootstrap/transition.js'
+    ];
+    // copy Font-awesome fonts Files
+    gulp.src(sources)
+        .pipe(uglify())
+        .pipe(concat('bootstrap.js'))
+        .pipe(gulp.dest(pathTo.assetsDir + '/js'));
+});
+
+gulp.task('bootstrap3b',['bootstrap3-icons', 'bootstrap3JS'], function() {
+    return sass(pathTo.bowerDir + '/bootstrap-sass-official/assets/stylesheets/_bootstrap.scss', { style: 'expanded' })
+        .pipe(autoprefixer({
+            browsers: params.autoprefixer.default
+        }))
+        .pipe(rename('bootstrap3.css'))
+        .pipe(gulp.dest(pathTo.assetsDir + '/css'));
+
+
+    // .pipe(rename({suffix: '.min'}))
+});
+
+gulp.task('bootstrap3', ['bootstrap3-icons', 'bootstrap3JS'], function() {
+    "use strict";
+    var sources = [
+        pathTo.bowerDir + '/bootstrap/dist/css/bootstrap.min.css'
+    ]
+    gulp.src(sources)
+        .pipe(rename('bootstrap.css'))
+        .pipe(gulp.dest(pathTo.assetsDir + '/css'));
+});
+
+
+// ----------------------------------------------------  GULP INIT BOWER DEPENDENCIES TASKS ----------------------------------------------------
+gulp.task('del', function() {
+    del([
+        pathTo.assetsDir + '/css/**.*',
+        pathTo.assetsDir + '/js/**.*',
+        pathTo.assetsDir + '/fonts/**.*'
+    ], function (err, paths) {
+        console.log('Deleted files/folders:\n', paths.join('\n'));
+    });
+});
+gulp.task('bower', ['del'], function() {
+    return bower()
+        .pipe(gulp.dest(pathTo.bowerDir))
+});
+// ----------------------------------------------------  GULP CUSTOM TASKS: JAVASCRIPT --------------------------------------------
+
+
+gulp.task('mainHtml', function(){
+    var sourcesHTML = [
+        pathTo.prodDir + '/*.html',
+        pathTo.prodDir + '/**/*.html',
+        pathTo.prodDir + '/**/*.php'
+
+    ];
+    gulp.src(sourcesHTML)
+        .pipe(reload({ stream: true }));
+});
+
+gulp.task('mainJs', function(){
+    var sourcesJS = [
+        pathTo.assetsDirDev + '/js/*.js'
+    ];
+    gulp.src(sourcesJS)
+        .pipe(plumber())
+        .pipe(uglify())
+        .pipe(gulp.dest(pathTo.assetsDir  + '/js'))
+        .pipe(reload({ stream: true }));
+});
+
+
+// ----------------------------------------------------  GULP CUSTOM TASKS: CSS --------------------------------------------
+
+gulp.task('mainCSS', function(){
+    var sourcesCSS = [
+        pathTo.assetsDirDev + '/css/*.css'
+    ];
+    gulp.src(sourcesCSS)
+        .pipe(plumber())
+        .pipe(autoprefixer({
+            browsers: params.autoprefixer.default
+        }))
+        .pipe(minifycss(params.minify))
+        .pipe(gulp.dest(pathTo.assetsDir  + '/css'))
+        .pipe(reload({ stream: true }));
+
+});
+
+// ----------------------------------------------------  GULP CUSTOM TASKS: SCSS --------------------------------------------
+
+gulp.task('mainSCSS', function(){
+    return sass(pathTo.assetsDirDev + '/scss/style.scss', { style: 'compact' })
+        .pipe(plumber())
+        .pipe(stripCssComments({preserve: true}))
+        .pipe(removeEmptyLines())
+        .pipe(autoprefixer({
+            browsers: params.autoprefixer.default
+        }))
+        .pipe(gulp.dest(pathTo.prodDir))
+        .pipe(reload({ stream: true }));
+
+});
+
+
+
+
+
+
+
+
+/*
+ // Just to keep the syntax
+
+ gulp.task("custom-modernizr", function() {
+ return gulp.src("bower_components/modernizr/modernizr.js")
+ .pipe(modulizr([
+ "cssclasses",
+ "svg",
+ "url-data-uri"
+ ]))
+ .pipe(addSrc([
+ "bower_components/modernizr/feature-detects/url-data-uri.js"
+ ]))
+ .pipe(concat("custom-modernizr.js"))
+ .pipe(gulp.dest(pathTo.assetsDirDev + '/js'));
+ });
+
+ */
