@@ -49,6 +49,7 @@
         typings
         tslint
         foundation-cli
+        karma-cli
 
     "
 
@@ -137,7 +138,8 @@
             gulp-watch
             typescript gulp-typescript
             child_process
-
+            gulp-babel babel-preset-env
+            gulp-sourcemaps
 
 
         qartjs angular-qart
@@ -155,12 +157,15 @@
             html-webpack-plugin angular2-template-loader
             awesome-typescript-loader
 
+         karma
+            karma-webpack karma-jasmine karma-firefox-launcher karma-chrome-launcher jasmine-core
+
+
         reflect-metadata
         minimatch
         typings
 
       "
-
 
 
 

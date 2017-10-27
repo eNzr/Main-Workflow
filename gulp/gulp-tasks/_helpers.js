@@ -11,6 +11,7 @@ function conf () {
     var servName = 'mevines.wpdev.local';
     var servNameApp = 'mevines.wpdevapp.local';
     var webApp = 'localhost';
+    var jsTask = ['gulp-js', 'webpack']
 
 
     var config = {
@@ -36,7 +37,7 @@ function conf () {
                 scss:       'assets/scss/'
             },
             task:{
-                js:         'main'
+                js:         jsTask[0]
             }
         },
         WpThemeDir: {
@@ -61,7 +62,7 @@ function conf () {
                 languages:  '../themes/' + themeName + '/' + 'languages/'
             },
             task:{
-                js:         'main'
+                js:         jsTask[0]
             }
         },
         WpPluginDir: {
@@ -88,7 +89,7 @@ function conf () {
                 languages:  '../plugins/' + pluginName + '/assets/' + 'languages/'
             },
             task:{
-                js:         'main'
+                js:         jsTask[0]
             }
 
 
@@ -113,7 +114,7 @@ function conf () {
                 svg:        'assets/svg/'
             },
             task:{
-                js:         'webpack'
+                js:         jsTask[1]
             }
 
         }

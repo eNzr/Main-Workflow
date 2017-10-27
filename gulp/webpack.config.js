@@ -16,11 +16,12 @@ webpack-config-utils
 
  * ****************************** */
 
-var webpack = require('webpack');
+// var webpack = require('webpack');
 var path = require('path');
 
-// const DEVELOPMENT       = process.env.NODE_ENV === 'development';
-// const PROD              = process.env.NODE_ENV === 'production';
+const TEST              = process.env.NODE_ENV === 'test';
+// const DEVELOPMENT      = process.env.NODE_ENV === 'development';
+// const PROD             = process.env.NODE_ENV === 'production';
 
 const PROD = false;
 
@@ -31,8 +32,8 @@ const JsParams = {
     react:      { loaders: ['babel-loader'],            query: { presets: ['react', 'es2015' , 'stage-0'] } },
     typescript: { loaders: 'awesome-typescript-loader', query: { presets: ['es2015' , 'stage-0'] } },
     babel:      { loaders: ['babel'] },
-    css:        { loaders: ['style-loader', 'css-loader' ] },
-    sass:       { loaders: ['style-loader', 'css-loader', 'sass-loader'] }
+    css:        { loaders: ['style-loader', 'css-loader', 'postcss-loader', 'sass-loader'] },
+    sass:       { loaders: ['style-loader', 'css-loader',  'sass-loader'] }
 };
 const PrjRoot = '../';
 
@@ -44,37 +45,62 @@ function here(d) {
 
 
 
-module.exports =  {
+var config =  {
 
     entry: {
         app: "../_src/assets/js/app.js",
-        vendors: "../_src/assets/js/script.js"
+        vendors: [
+            "jQuery",
+            "../_src/assets/js/vendors.js"],
     },
-    context: here(  ),
+    context: here(),
     output: {
         path: here(),
+        pathinfo: true,
         filename: "../_dist/assets/js/[name].js"
     },
+    externals: {
+        "jquery": "jQuery"
+    },
+    devtool: 'source-map',
+
     module: {
+
         loaders: [
+            {
+                test: /\.(js|jsx)$/,
+                exclude: /(node_modules|bower_components|spec|e2e)/,
+                loader: JsParams[PRJ].loaders
+            },
             {
                 test: /\.(css|scss|sass)$/,
                 loader: JsParams['sass'].loaders
-            },
-            {
-                test: /\.ckdkdss$/,
-                loader: JsParams['css'].loaders
             }
+
         ]
     }
 
 
 };
 
+if (TEST) {
+    // config.entry = controllerSpec.js
+    // config.context = here ('test')
+}
+
+module.exports = config;
 
 /*
 
-
+plugins: [
+'postcss-import': {},
+    'postcss-cssnext': {},
+    'cssnano': {}
+        new webpack.ProvidePlugin({
+            $: "jquery",
+            jQuery: "jquery"
+        })
+    ],
 
 exclude: /(node_modules|bower_components|spec|e2e)/,
 

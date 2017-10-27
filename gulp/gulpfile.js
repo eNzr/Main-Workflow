@@ -24,9 +24,14 @@ var gulp    = require('gulp'),
         uglify: require('gulp-uglify'),
         rename: require('gulp-rename'),
         watch: require('gulp-watch'),
+        sourcemaps: require("gulp-sourcemaps"),
+        babel: require("gulp-babel"),
+        concat: require("gulp-concat"),
+
         del: require('del'),
 
         execDev: require('child_process').exec,
+        spawn: require('child_process').spawn,
         browserSync: require('browser-sync').create()
     };
 /*
@@ -49,21 +54,19 @@ function getTask(fileTask, task ) { return require('./gulp-tasks/' + fileTask)(g
 /* ------------- TASKs ------------- */
 gulp.task( 'cleanAll',      function() { getTask('clean'); });
 gulp.task( 'style',         function() { getTask('style'); });
-gulp.task( 'javascript',    function() { getTask('javascript'); });
+gulp.task( 'javascript',    function() { getTask('javascript'); }); /*initial call from watch.js*/
 
 
 //gulp.task('images',       function() { getTask('images'); });
 
 
 /* ------------- Watches ------------- */
-gulp.task( 'nonWebpackJS',  function() { gulp.watch([ project.root + project.src + '**/*.js' ], ['javascript']); });
-gulp.task( 'watch',         ['build-all'], function() {
-    //gulp.start('nonWebpackJS'); /* if not webpack driven */
-    getTask('watch'); });
+
+gulp.task( 'watch',         ['build-all'], function() { getTask('watch'); });
 
 /* ------------- Start Here ------------- */
 //gulp.task('build-all',    ['images', 'style', 'javascript']);
-gulp.task( 'build-all',     ['cleanAll','javascript', 'style']);
+gulp.task( 'build-all',     ['cleanAll', 'style']);
 gulp.task( 'default',       ['watch']);
 
 
@@ -71,4 +74,18 @@ gulp.task( 'default',       ['watch']);
 
 
 
+/*
+var gulp = require("gulp");
+var sourcemaps = require("gulp-sourcemaps");
+var babel = require("gulp-babel");
+var concat = require("gulp-concat");
 
+gulp.task("default", function () {
+  return gulp.src("src/ * * / *.js")
+    .pipe(sourcemaps.init())
+    .pipe(babel())
+    .pipe(concat("all.js"))
+    .pipe(sourcemaps.write("."))
+    .pipe(gulp.dest("dist"));
+});
+ */
