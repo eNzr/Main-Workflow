@@ -1,0 +1,64 @@
+# Compiled source #
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages #
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases #
+*.log
+*.sql
+*.sqlite
+
+# OS generated files #
+# already in . .. .DS_Store rule
+# .DS_Store
+# .DS_Store?
+# *.DS_Store
+# ._*
+# .Spotlight-V100
+# .Trashes
+
+ehthumbs.db
+Thumbs.db
+~*
+*.sass-cache*
+\.*
+
+!.gitignore
+!.htaccess
+!.editorconfig
+
+# Node related #
+/bower_components/*
+/node_modules/*
+/gulp/bower_components/*
+/gulp/node_modules/*
+
+# development files #
+# assets_dev
+__mevines_dist/*
+/_old/*
+_dist/*
+__jekyll_dist/*
+dist/
+typings/
+
+
+
+# DO NOT ARCHIVE MINIMIZED FILES JS & CSS
+
+# css/style.min.css
+# css/style.min.css.map
+# js/javascript.min.js
