@@ -7,7 +7,8 @@
  *  Notes
  *   // use rifraf instead of del if this need Windows compatibiity .. maybe one day .. or not
  *   // $       = require('gulp-load-plugins')({ pattern: '*' }), // too much lib for offline dev
- * ****************************** */
+ *   //
+ * * ****************************** */
 
 'use strict';
 
